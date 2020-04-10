@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_expenseapp/widgets/chart.dart';
 import './widgets/new_transaction.dart';
 import './widgets/transaction_list.dart';
 import './models/transaction.dart';
@@ -11,12 +12,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "Personal Expenses",
       theme: ThemeData(
-        primarySwatch: Colors.yellow,
-        accentColor: Colors.orange,
-        backgroundColor: Colors.yellow,
-        textTheme: ThemeData.light()
-            .textTheme
-            .copyWith(title: TextStyle(fontFamily: 'Quicksand', fontSize: 18)),
+        primaryColor: const Color(0xffcbb3cd),
+        accentColor: const Color(0xffb3cef7),
+        //backgroundColor: Colors.yellow,
+        textTheme: ThemeData.light().textTheme.copyWith(
+              title: TextStyle(
+                  fontFamily: 'Quicksand',
+                  fontSize: 18,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
+            ),
         appBarTheme: AppBarTheme(
           textTheme: ThemeData.light().textTheme.copyWith(
                 title: TextStyle(
@@ -57,15 +62,30 @@ class _MyHomePageState extends State<MyHomePage> {
     //     id: 't2', title: 'New Dress', amount: 56.90, date: DateTime.now()),
   ];
 
-  void _addNewTransaction(String txTitle, double txAmount) {
+  List<Transaction>
+      get _recentTransactions //getter for recentTx to pass to chartWidget
+  {
+    return _userTransactions.where((tx) {
+      return tx.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
+    }).toList();
+  }
+
+  void _addNewTransaction(
+      String txTitle, double txAmount, DateTime pickedDate) {
     final newTx = Transaction(
         id: DateTime.now().toString(),
         title: txTitle,
         amount: txAmount,
-        date: DateTime.now());
+        date: pickedDate);
 
     setState(() {
       _userTransactions.add(newTx);
+    });
+  }
+
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((tx) => tx.id == id);
     });
   }
 
@@ -73,6 +93,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 5,
+        backgroundColor: const Color(0xffb3cef7),
         title: Text("Personal Expenses"),
         actions: <Widget>[
           IconButton(
@@ -90,12 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Container(
               width: double.infinity,
-              child: Card(
-                color: Colors.white,
-                child: Text("Chart area"),
-              ),
+              child: Chart(_recentTransactions),
             ),
-            TransactionList(_userTransactions),
+            TransactionList(_userTransactions, _deleteTransaction),
           ],
         ),
       ),
